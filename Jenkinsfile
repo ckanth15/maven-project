@@ -27,12 +27,12 @@ stages{
             //     file.hello()
             // }
             sh 'mvn clean package -DskipTests=true'
-            echo "Hello ${params.LASTNAME} ${env.NAME}"
+            echo "Hello ${params.LASTNAME} ${NAME}"
            
         }
         post {
         success{
-            archiveArtifacts artifacts: '**/target/*.War'
+            archiveArtifacts artifacts: '**/target/*.war'
             }
         }
     }
