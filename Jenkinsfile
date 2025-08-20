@@ -34,14 +34,14 @@ pipeline {
                     agent { label 'DevServer' }
                     steps {
                         echo "Running TestA"
-                        sh "mvn test -Dtest=TestA"
+                        sh "mvn test"
                     }
                 }
                 stage('TestB') {
                     agent { label 'DevServer' }
                     steps {
                         echo "Running TestB"
-                        sh "mvn test -Dtest=TestB"
+                        sh "mvn test"
                     }
                 }
             }
