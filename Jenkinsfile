@@ -47,7 +47,7 @@ pipeline {
             }
             post {
                 success {
-                    dir('webapp/target') {
+                    dir('webapp/target/') {
                         stash name: 'maven-build-files', includes: '*.war'
                     }
                 }
