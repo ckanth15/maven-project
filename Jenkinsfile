@@ -30,7 +30,25 @@ stages{
             echo "Hello ${params.LASTNAME} ${NAME}"
            
         }
-        post {
+    }
+    stage('test')
+    {
+        parallel{
+            stage('testA ')
+            {
+                steps {
+                    echo "this is testA"
+                }
+            }
+            stage('testB ')
+            {
+                steps {
+                    // sh 'mvn test'
+                    echo "this is testB"
+                }
+            }
+        }
+        post{
         success{
             archiveArtifacts artifacts: '**/target/*.war'
             }
