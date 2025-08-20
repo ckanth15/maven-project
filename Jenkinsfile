@@ -1,92 +1,84 @@
-pipeline
-{
-
-agent {
-  label 'DevServer'
-}
-
-parameters {
-    // choice choices: ['dev', 'prod'], name: 'select_environment'
-  choice choices: ['dev', 'prod'], description: 'Select your environment', name: 'select_environment'
-}
-
-environment{
-    NAME = "chandra"
-}
-tools {
-  maven 'mymaven'
-}
-
-stages{
-
-    stage('build')
-    {
-        steps {
-            // script{
-            //     file = load "script.groovy"
-            //     file.hello()
-            // }
-            sh 'mvn clean package -DskipTests=true'
-            // echo "Hello ${params.LASTNAME} ${NAME}"
-           
-        }
+pipeline {
+    agent {
+        label 'DevServer'
     }
-    stage('test')
-    {
-        parallel{
-            stage('testA ')
-            {
-                agent {
-                    label 'DevServer'
-                }
-                steps {
-                    echo "this is testA"
-                    sh "maven test -Dtest=TestA"
-                }
-            }
-            stage('testB ')
-            {
-                agent {
-                    label 'DevServer'
-                }
-                steps {
-                    // sh 'mvn test'
-                    echo "this is testB"
-                    sh "maven test -Dtest=TestB"
-                }
-            }
-        }
-        post{
-        success{
-            // archiveArtifacts artifacts: '**/target/*.war'
-            dir ('webapp/target') {
-                stash name: 'maven-build-files', includes: '*.war'
-            }
-        }
+
+    parameters {
+        choice(
+            name: 'select_environment',
+            choices: ['dev', 'prod'],
+            description: 'Select your environment'
+        )
     }
-    stage('deploy_dev')
-    {
-        steps {
+
+    environment {
+        NAME = "chandra"
+    }
+
+    tools {
+        maven 'mymaven'
+    }
+
+    stages {
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package -DskipTests=true'
+                echo "Build complete for ${params.select_environment} environment"
+            }
+        }
+
+        stage('Test') {
+            parallel {
+                stage('TestA') {
+                    agent { label 'DevServer' }
+                    steps {
+                        echo "Running TestA"
+                        sh "mvn test -Dtest=TestA"
+                    }
+                }
+                stage('TestB') {
+                    agent { label 'DevServer' }
+                    steps {
+                        echo "Running TestB"
+                        sh "mvn test -Dtest=TestB"
+                    }
+                }
+            }
+            post {
+                success {
+                    dir('webapp/target') {
+                        stash name: 'maven-build-files', includes: '*.war'
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Dev') {
             when {
                 expression { params.select_environment == 'dev' }
-                beforeAgent true
             }
-            agent {
-                label 'DevServer'
-            }
-            steps
-            {
-                dir('var/www/html')
-                {
+            agent { label 'DevServer' }
+            steps {
+                dir('/var/www/html') {
                     unstash 'maven-build-files'
                 }
                 sh '''
-                cd /var/www/html
-                jar -xvf *.war
+                    cd /var/www/html
+                    jar -xvf *.war
                 '''
             }
-            }
         }
+
+        // stage('Deploy to Prod') {
+        //     when {
+        //         expression { params.select_environment == 'prod' }
+        //     }
+        //     agent { label 'ProdServer' }
+        //     steps {
+        //         echo "Deploying to Production..."
+        //         // Add prod deployment logic here
+        //     }
+        // }
     }
-}
 }
